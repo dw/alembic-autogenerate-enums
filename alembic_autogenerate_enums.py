@@ -18,14 +18,14 @@ def get_defined_enums(conn, schema):
     defined values.
 
     :param conn:
-        DB-API connection instance.
+        SQLAlchemy connection instance.
 
     :param str schema:
         Schema name (e.g. "public").
 
     :returns dict:
         {
-            "my_enum": set(["a", "b", "c"]),
+            "my_enum": frozenset(["a", "b", "c"]),
         }
     """
     sql = """
@@ -48,15 +48,15 @@ def get_declared_enums(metadata, schema, default):
     Return a dict mapping SQLAlchemy enumeration types to the set of their
     declared values.
 
-    :param conn:
-        DB-API connection instance.
+    :param metadata:
+        ...
 
     :param str schema:
         Schema name (e.g. "public").
 
     :returns dict:
         {
-            "my_enum": set(["a", "b", "c"]),
+            "my_enum": frozenset(["a", "b", "c"]),
         }
     """
     types = set(column.type
@@ -79,6 +79,7 @@ class SyncEnumValuesOp(alembic.operations.ops.MigrateOperation):
 
     def reverse(self):
         """
+        See MigrateOperation.reverse().
         """
         return SyncEnumValuesOp(self.schema, self.name,
                                 old_values=self.new_values,
@@ -87,6 +88,21 @@ class SyncEnumValuesOp(alembic.operations.ops.MigrateOperation):
     @classmethod
     def sync_enum_values(cls, operations, schema, name, old_values, new_values):
         """
+        Define every enum value from `new_values` that is not present in
+        `old_values`.
+
+        :param operations:
+            ...
+        :param str schema:
+            Schema name.
+        :param name:
+            Enumeration type name.
+        :param list old_values:
+            List of enumeration values that existed in the database before this
+            migration executed.
+        :param list new_values:
+            List of enumeration values that should exist after this migration
+            executes.
         """
         with operations.get_bind().connect() as conn:
             conn.execute('COMMIT')
@@ -113,6 +129,13 @@ def render_sync_enum_value_op(autogen_context, op):
 @alembic.autogenerate.comparators.dispatch_for("schema")
 def compare_enums(autogen_context, upgrade_ops, schema_names):
     """
+    Walk the declared SQLAlchemy schema for every referenced Enum, walk the PG
+    schema for every definde Enum, then generate SyncEnumValuesOp migrations
+    for each defined enum that has grown new entries when compared to its
+    declared version.
+
+    Enums that don't exist in the database yet are ignored, since
+    SQLAlchemy/Alembic will create them as part of the usual migration process.
     """
     to_add = set()
     for schema in schema_names:
@@ -124,7 +147,7 @@ def compare_enums(autogen_context, upgrade_ops, schema_names):
         declared = get_declared_enums(autogen_context.metadata, schema, default)
         for name, new_values in declared.iteritems():
             old_values = defined[name]
-            # SQLAlchemy will handle creation of the type in this migration, so
+            # Alembic will handle creation of the type in this migration, so
             # skip undefined names.
             if name in defined and new_values.difference(old_values):
                 to_add.add((schema, name, old_values, new_values))
