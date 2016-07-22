@@ -146,7 +146,7 @@ def compare_enums(autogen_context, upgrade_ops, schema_names):
         defined = get_defined_enums(autogen_context.connection, schema)
         declared = get_declared_enums(autogen_context.metadata, schema, default)
         for name, new_values in declared.iteritems():
-            old_values = defined[name]
+            old_values = defined.get(name)
             # Alembic will handle creation of the type in this migration, so
             # skip undefined names.
             if name in defined and new_values.difference(old_values):
