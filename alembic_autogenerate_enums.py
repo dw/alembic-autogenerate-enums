@@ -60,7 +60,7 @@ def get_declared_enums(metadata, schema, default):
         }
     """
     types = set(column.type
-                for table in metadata.tables.itervalues()
+                for table in metadata.tables.values()
                 for column in table.columns
                 if (isinstance(column.type, sqlalchemy.Enum) and
                     schema == (column.type.schema or default)))
@@ -145,7 +145,7 @@ def compare_enums(autogen_context, upgrade_ops, schema_names):
 
         defined = get_defined_enums(autogen_context.connection, schema)
         declared = get_declared_enums(autogen_context.metadata, schema, default)
-        for name, new_values in declared.iteritems():
+        for name, new_values in declared.items():
             old_values = defined.get(name)
             # Alembic will handle creation of the type in this migration, so
             # skip undefined names.
