@@ -3,7 +3,6 @@ Alembic extension to generate ALTER TYPE .. ADD VALUE statements to update
 SQLAlchemy enums.
 """
 
-from __future__ import absolute_import
 import alembic
 import alembic.autogenerate
 import alembic.autogenerate.render
@@ -38,9 +37,12 @@ def get_defined_enums(conn, schema):
         LEFT JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
         WHERE
             t.typtype = 'e'
-            AND n.nspname = %s
+            AND n.nspname = :schema
     """
-    return {r[0]: frozenset(r[1]) for r in conn.execute(sql, (schema,))}
+    return {
+        r[0]: frozenset(r[1])
+        for r in conn.execute(sqlalchemy.text(sql), dict(schema=schema))
+    }
 
 
 def get_declared_enums(metadata, schema, default):
@@ -59,18 +61,20 @@ def get_declared_enums(metadata, schema, default):
             "my_enum": frozenset(["a", "b", "c"]),
         }
     """
-    types = set(column.type
-                for table in metadata.tables.values()
-                for column in table.columns
-                if (isinstance(column.type, sqlalchemy.Enum) and
-                    schema == (column.type.schema or default)))
+    types = set(
+        column.type
+        for table in metadata.tables.values()
+        for column in table.columns
+        if (
+            isinstance(column.type, sqlalchemy.Enum)
+            and schema == (column.type.schema or default)
+        )
+    )
     return {t.name: frozenset(t.enums) for t in types}
 
 
 @alembic.operations.base.Operations.register_operation("sync_enum_values")
 class SyncEnumValuesOp(alembic.operations.ops.MigrateOperation):
-    """
-    """
     def __init__(self, schema, name, old_values, new_values):
         self.schema = schema
         self.name = name
@@ -81,9 +85,12 @@ class SyncEnumValuesOp(alembic.operations.ops.MigrateOperation):
         """
         See MigrateOperation.reverse().
         """
-        return SyncEnumValuesOp(self.schema, self.name,
-                                old_values=self.new_values,
-                                new_values=self.old_values)
+        return SyncEnumValuesOp(
+            self.schema,
+            self.name,
+            old_values=self.new_values,
+            new_values=self.old_values,
+        )
 
     @classmethod
     def sync_enum_values(cls, operations, schema, name, old_values, new_values):
@@ -105,20 +112,18 @@ class SyncEnumValuesOp(alembic.operations.ops.MigrateOperation):
             executes.
         """
         with operations.get_bind().connect() as conn:
-            conn.execute('COMMIT')
+            conn.execute(sqlalchemy.text("COMMIT"))
             for value in set(new_values) - set(old_values):
-                conn.execute("ALTER TYPE %s.%s ADD VALUE '%s'" % (
-                    schema,
-                    name,
-                    value
-                ))
+                conn.execute(
+                    sqlalchemy.text(
+                        "ALTER TYPE %s.%s ADD VALUE '%s'" % (schema, name, value)
+                    )
+                )
 
 
 @alembic.autogenerate.render.renderers.dispatch_for(SyncEnumValuesOp)
 def render_sync_enum_value_op(autogen_context, op):
-    """
-    """
-    return 'op.sync_enum_values(%r, %r, %r, %r)' % (
+    return "op.sync_enum_values(%r, %r, %r, %r)" % (
         op.schema,
         op.name,
         sorted(op.old_values),
