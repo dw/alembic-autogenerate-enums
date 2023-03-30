@@ -1,7 +1,11 @@
 import pytest
-from test_harness.database import get_url
-from sqlalchemy import create_engine, text
 from alembic_autogenerate_enums import get_defined_enums
+from sqlalchemy import create_engine, text
+
+from alembic.config import Config
+from alembic.script import ScriptDirectory
+from test_harness.database import get_url
+
 
 @pytest.fixture()
 def clear_db():
@@ -27,3 +31,16 @@ def clear_db():
         connection.execute(text("COMMIT"))
 
     yield
+
+
+@pytest.fixture()
+def alembic_config():
+    config = Config("alembic.ini")
+    config.set_main_option("script_location", "alembic")
+    return config
+
+
+@pytest.fixture()
+def alembic_script(alembic_config):
+    script = ScriptDirectory.from_config(alembic_config)
+    return script

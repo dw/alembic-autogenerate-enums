@@ -25,7 +25,7 @@ jobs:
       - name: Install dependencies
         run: pip install -e . && pip install -e test-harness
 
-      - name: Connect to PostgreSQL
+      - name: Run test harness
         run: cd test-harness && pytest
         env:
           POSTGRES_HOST: localhost

@@ -1,5 +1,7 @@
-from sqlalchemy import create_engine
 import os
+
+from sqlalchemy import create_engine
+
 
 def get_url():
     user = os.environ.get("POSTGRES_USER", "alembic-autogenerate")

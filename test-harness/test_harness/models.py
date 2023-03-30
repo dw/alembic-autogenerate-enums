@@ -1,6 +1,9 @@
-from sqlalchemy.orm import declarative_base
 from enum import Enum
-from sqlalchemy import Column, Enum as SqlEnum, Integer
+
+from sqlalchemy import Column
+from sqlalchemy import Enum as SqlEnum
+from sqlalchemy import Integer
+from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
 
