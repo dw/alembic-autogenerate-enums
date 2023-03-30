@@ -40,3 +40,7 @@ pip install -e test-harness
 createuser alembic-autogenerate
 createdb -O alembic-autogenerate alembic-autogenerate_db
 ```
+
+```
+cd test-harness && pytest
+```
