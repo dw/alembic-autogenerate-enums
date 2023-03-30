@@ -132,8 +132,8 @@ class SyncEnumValuesOp(alembic.operations.ops.MigrateOperation):
         name,
         old_values: list[str],
         new_values: list[str],
-        affected_columns: list[tuple[str, str]],
-        should_reverse: bool,
+        affected_columns: list[tuple[str, str]] = None,
+        should_reverse: bool = False,
     ):
         """
         Define every enum value from `new_values` that is not present in
@@ -150,8 +150,20 @@ class SyncEnumValuesOp(alembic.operations.ops.MigrateOperation):
         :param list new_values:
             List of enumeration values that should exist after this migration
             executes.
+
+        Note that `should_reverse` defaults to False here to keep backwards compatibility
+        with previous migrations. The old interface to `sync_enum_values` supported explicit
+        enum values without a reverse state:
+            schema,
+            name,
+            old_values: list[str]
+            new_values: list[str]
+        By defaulting this to False, we avoid performing our new backwards migration logic
+        and will default to the stub implementation that was previously used (and only
+        executable by superusers).
+
         """
-        if should_reverse:
+        if should_reverse and affected_columns is not None:
             with operations.get_bind().connect() as conn:
                 all_values = ", ".join([
                     f"'{value}'"
