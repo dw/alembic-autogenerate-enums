@@ -17,12 +17,30 @@ To the top of your ``env.py``.
 
 ## Notes
 
-Generated migrations only work in one direction, since without a superuser
-account and a bunch of dangerous operations it isn't possible to remove
-PostgreSQL ENUM values. Despite that, the generated migrations contain
-downgrade code, just in case the implementation is improved (or e.g. extended
-to work with other DBs) at some later date.
-
 Since ``ALTER TYPE .. ADD VALUE`` cannot run transactionally, each
 ``op.sync_enum_values()`` call creates its own temporary private DB connection.
 See https://bitbucket.org/zzzeek/alembic/issues/123/a-way-to-run-non-transactional-ddl
+
+## Tests
+
+We have incredibly basic tests in a [sample project](./test-harness).
+
+```
+mkvirtualenv alembic-autogenerate
+```
+
+Install the main autogenerate package and then the test harness:
+
+```
+pip install -e .
+pip install -e test-harness
+```
+
+```
+createuser alembic-autogenerate
+createdb -O alembic-autogenerate alembic-autogenerate_db
+```
+
+```
+cd test-harness && pytest
+```
