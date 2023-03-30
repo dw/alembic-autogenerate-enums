@@ -16,9 +16,17 @@ def test_basic_migration(clear_db):
         assert context.get_current_revision() is None
         assert script.get_current_head() is not None
 
+    # Test the upgrade
     command.upgrade(config, "head")
 
-    engine = sqlalchemy.create_engine(get_url())
     with engine.begin() as conn:
         context = migration.MigrationContext.configure(conn)
         assert context.get_current_revision() == script.get_current_head()
+
+    # Test the full downgrade
+    command.downgrade(config, "base")
+
+    with engine.begin() as conn:
+        context = migration.MigrationContext.configure(conn)
+        assert context.get_current_revision() is None
+        assert script.get_current_head() is not None
