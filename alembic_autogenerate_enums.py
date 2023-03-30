@@ -11,6 +11,7 @@ import alembic.operations.base
 import alembic.operations.ops
 from dataclasses import dataclass
 import sqlalchemy
+from contextlib import contextmanager
 
 
 @dataclass
@@ -93,6 +94,20 @@ def get_declared_enums(metadata, schema, default):
     )
 
 
+@contextmanager
+def get_connection(operations) -> sqlalchemy.engine.Connection:
+    """
+    SQLAlchemy 2.0 changes the operation binding location; bridge function to support
+    both 1.x and 2.x.
+
+    """
+    binding = operations.get_bind()
+    if isinstance(binding, sqlalchemy.engine.Connection):
+        yield binding
+        return
+    yield binding.connect()
+
+
 @alembic.operations.base.Operations.register_operation("sync_enum_values")
 class SyncEnumValuesOp(alembic.operations.ops.MigrateOperation):
     def __init__(
@@ -164,7 +179,7 @@ class SyncEnumValuesOp(alembic.operations.ops.MigrateOperation):
 
         """
         if should_reverse and affected_columns is not None:
-            with operations.get_bind().connect() as conn:
+            with get_connection(operations) as conn:
                 all_values = ", ".join([
                     f"'{value}'"
                     for value in sorted(set(new_values))
@@ -180,7 +195,7 @@ class SyncEnumValuesOp(alembic.operations.ops.MigrateOperation):
                 conn.execute(sqlalchemy.text(f"DROP TYPE {schema}.{name}_old"))
                 return
 
-        with operations.get_bind().connect() as conn:
+        with get_connection(operations) as conn:
             conn.execute(sqlalchemy.text("COMMIT"))
             for value in set(new_values) - set(old_values):
                 conn.execute(
