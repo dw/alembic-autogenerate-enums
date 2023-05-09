@@ -12,6 +12,7 @@ import alembic.operations.ops
 from dataclasses import dataclass
 import sqlalchemy
 from contextlib import contextmanager
+from typing import Optional, Dict, List, Tuple, FrozenSet
 
 
 @dataclass
@@ -24,8 +25,8 @@ class EnumToTable:
 @dataclass
 class DeclaredEnumValues:
     # enum name -> frozenset of values
-    enum_definitions: dict[str, frozenset[str]]
-    table_definitions: list[EnumToTable] | None = None
+    enum_definitions: Dict[str, FrozenSet[str]]
+    table_definitions: Optional[List[EnumToTable]] = None
 
 
 def get_defined_enums(conn, schema):
@@ -114,9 +115,9 @@ class SyncEnumValuesOp(alembic.operations.ops.MigrateOperation):
             self,
             schema: str,
             name: str,
-            old_values: list[str],
-            new_values: list[str],
-            affected_columns: list[tuple[str, str]],
+            old_values: List[str],
+            new_values: List[str],
+            affected_columns: List[Tuple[str, str]],
             should_reverse: bool = False
         ):
         self.schema = schema
@@ -145,9 +146,9 @@ class SyncEnumValuesOp(alembic.operations.ops.MigrateOperation):
         operations,
         schema,
         name,
-        old_values: list[str],
-        new_values: list[str],
-        affected_columns: list[tuple[str, str]] = None,
+        old_values: List[str],
+        new_values: List[str],
+        affected_columns: List[Tuple[str, str]] = None,
         should_reverse: bool = False,
     ):
         """

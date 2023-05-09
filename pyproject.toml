@@ -1,14 +1,14 @@
 [tool.poetry]
 name = "alembic-autogenerate-enums"
-version = "0.1.0"
+version = "0.1.1"
 description = "Alembic hook that allows enums values to be upgraded and downgraded in migrations automatically"
 license = "MIT"
 readme = "README.md"
-authors = ["Pierce Freeman <pierce@freeman.vc>", "David Wilson <dw@botanicus.net>"]
+authors = ["David Wilson <dw@botanicus.net>", "Pierce Freeman <pierce@freeman.vc>"]
 packages = [{include = "alembic_autogenerate_enums"}]
 
 [tool.poetry.dependencies]
-python = "^3.5"
+python = "^3.7"
 
 
 [build-system]
