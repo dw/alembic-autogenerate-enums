@@ -9,10 +9,9 @@ import pytest
 from alembic.autogenerate.api import AutogenContext
 from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
-
 from test_harness.enums import sync_sqlalchemy
-from test_harness.models import (Base, BaseV2, SimpleEnum, SimpleModel,
-                                 SimpleModelMapped)
+from test_harness.models import (SimpleEnum, SimpleModel,
+                                 SimpleModelCustomEnum, SimpleModelMapped)
 from test_harness.tests.fixtures import get_fixture_path
 
 
@@ -23,11 +22,13 @@ from test_harness.tests.fixtures import get_fixture_path
             (SimpleModel, [], ["A"]),
             (SimpleModelMapped, ["F"], []),
             (SimpleModelMapped, [], ["A"]),
+            (SimpleModelCustomEnum, ["F"], []),
+            (SimpleModelCustomEnum, [], ["A"]),
         ]
     )
 def test_migration_includes_sync_enum_values(
     clear_db,
-    model: Base | BaseV2,
+    model,
     add_values: list[str],
     remove_values: list[str],
 ):

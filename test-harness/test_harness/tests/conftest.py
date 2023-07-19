@@ -1,11 +1,11 @@
 import pytest
 from alembic.config import Config
 from alembic.script import ScriptDirectory
-from alembic_autogenerate_enums import get_defined_enums
 from sqlalchemy import create_engine, text
-
 from test_harness.database import get_url
 from test_harness.tests.fixtures import get_fixture_path
+
+from alembic_autogenerate_enums import get_defined_enums
 
 
 @pytest.fixture()
@@ -14,8 +14,8 @@ def clear_db():
     engine = create_engine(url)
     with engine.connect() as connection:
         # Drop the database tables
-        from test_harness.models import Base, BaseV2
-        for base_class in [Base, BaseV2]:
+        from test_harness.models import Base, BaseV2, BaseV3
+        for base_class in [Base, BaseV2, BaseV3]:
             for table in base_class.metadata.tables.values():
                 connection.execute(text(f"DROP TABLE IF EXISTS {table.name} CASCADE"))
 

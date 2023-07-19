@@ -1,6 +1,7 @@
 from enum import Enum, EnumMeta
 
 from sqlalchemy import Enum as SQLAlchemyEnum
+from sqlalchemy import TypeDecorator
 from sqlalchemy.dialects.postgresql import ENUM as PostgresENUM
 
 
@@ -59,8 +60,12 @@ def sync_sqlalchemy(model, enum_class: ModifiableEnum):
 
     """
     for column in model.__table__.c:
-        if isinstance(column.type, (SQLAlchemyEnum, PostgresENUM)) and column.type.python_type == enum_class:
+        col_type = column.type
+        if isinstance(column.type, TypeDecorator):
+            col_type = column.type.impl
+    
+        if isinstance(col_type, (SQLAlchemyEnum, PostgresENUM)) and col_type.python_type == enum_class:
             # Found a column with the old Enum type
             # Replace it with the new type
-            assert column.type.enums
-            column.type.enums = [item.value for item in enum_class]
+            assert col_type.enums
+            col_type.enums = [item.value for item in enum_class]
