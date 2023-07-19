@@ -4,15 +4,16 @@ SQLAlchemy enums.
 
 """
 
+from contextlib import contextmanager
+from dataclasses import dataclass
+from typing import Dict, FrozenSet, List, Optional, Tuple
+
 import alembic
 import alembic.autogenerate
 import alembic.autogenerate.render
 import alembic.operations.base
 import alembic.operations.ops
-from dataclasses import dataclass
 import sqlalchemy
-from contextlib import contextmanager
-from typing import Optional, Dict, List, Tuple, FrozenSet
 
 
 @dataclass
@@ -60,6 +61,18 @@ def get_defined_enums(conn, schema):
     })
 
 
+def is_enum_column_type(column_type):
+    """
+    Determines whether an column is a valid Enum type
+    """
+    if isinstance(column_type, sqlalchemy.TypeDecorator):
+        column_type = column_type.impl
+
+    if isinstance(column_type, sqlalchemy.Enum):
+        return True
+    return False
+
+
 def get_declared_enums(metadata, schema, default):
     """
     Return a dict mapping SQLAlchemy enumeration types to the set of their
@@ -81,7 +94,7 @@ def get_declared_enums(metadata, schema, default):
 
     for table in metadata.tables.values():
         for column in table.columns:
-            if isinstance(column.type, sqlalchemy.Enum) and schema == (column.type.schema or default):
+            if is_enum_column_type(column.type) and schema == (column.type.schema or default):
                 types.add(column.type)
                 table_definitions.append(
                     EnumToTable(table.name, column.name, column.type.name)
@@ -240,7 +253,7 @@ def compare_enums(autogen_context, upgrade_ops, schema_names):
             old_values = defined.enum_definitions.get(name)
             # Alembic will handle creation of the type in this migration, so
             # skip undefined names.
-            if name in defined.enum_definitions and new_values.difference(old_values):
+            if name in defined.enum_definitions and new_values != old_values:
                 affected_columns = frozenset(
                     (table_definition.table_name, table_definition.column_name)
                     for table_definition in declared.table_definitions
