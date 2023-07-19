@@ -2,6 +2,7 @@ import os
 import shutil
 import tempfile
 from pathlib import Path
+from typing import List
 from unittest.mock import PropertyMock, patch
 
 import alembic.config
@@ -16,7 +17,7 @@ from test_harness.models import SimpleEnum, SimpleModel, SimpleModelCustomEnum
 from test_harness.tests.fixtures import get_fixture_path
 
 
-def modify_enum(model, enum: ModifiableEnum, add_values: list[str], remove_values: list[str]):
+def modify_enum(model, enum: ModifiableEnum, add_values: List[str], remove_values: List[str]):
     # Now manipulate the enum values by adding a new value
     for value in add_values:
         assert value not in [value.value for value in enum]
@@ -47,8 +48,8 @@ if sqlalchemy.__version__ > '2.0':
 def test_migration_includes_sync_enum_values(
     clear_db,
     model,
-    add_values: list[str],
-    remove_values: list[str],
+    add_values: List[str],
+    remove_values: List[str],
 ):
     # Set up temporary directory
     temp_dir = Path(tempfile.mkdtemp())
