@@ -1,8 +1,8 @@
 import sqlalchemy
-from alembic_autogenerate_enums import get_declared_enums, get_defined_enums
-
 from alembic import command
 from alembic.runtime import migration
+from alembic_autogenerate_enums import get_declared_enums, get_defined_enums
+
 from test_harness.database import get_url
 from test_harness.models import SimpleEnum
 

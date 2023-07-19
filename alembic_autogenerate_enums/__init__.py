@@ -4,15 +4,16 @@ SQLAlchemy enums.
 
 """
 
+from contextlib import contextmanager
+from dataclasses import dataclass
+from typing import Dict, FrozenSet, List, Optional, Tuple
+
 import alembic
 import alembic.autogenerate
 import alembic.autogenerate.render
 import alembic.operations.base
 import alembic.operations.ops
-from dataclasses import dataclass
 import sqlalchemy
-from contextlib import contextmanager
-from typing import Optional, Dict, List, Tuple, FrozenSet
 
 
 @dataclass
