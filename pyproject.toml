@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "alembic-autogenerate-enums"
-version = "0.1.1"
+version = "0.1.2"
 description = "Alembic hook that allows enums values to be upgraded and downgraded in migrations automatically"
 license = "MIT"
 readme = "README.md"
