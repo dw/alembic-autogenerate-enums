@@ -5,6 +5,7 @@ from sqlalchemy import Enum as SqlEnum
 from sqlalchemy import Integer
 from sqlalchemy.orm import (DeclarativeBase, Mapped, declarative_base,
                             mapped_column)
+
 from test_harness.columns import EnumCustomType
 from test_harness.enums import ModifiableEnum
 

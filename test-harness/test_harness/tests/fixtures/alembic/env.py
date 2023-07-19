@@ -3,11 +3,10 @@ from __future__ import with_statement
 import os
 from logging.config import fileConfig
 
+import alembic_autogenerate_enums
 from alembic import context
 from alembic.runtime.environment import EnvironmentContext
 from sqlalchemy import engine_from_config, pool
-
-import alembic_autogenerate_enums
 
 # Typehinting injected globals
 context : EnvironmentContext = context

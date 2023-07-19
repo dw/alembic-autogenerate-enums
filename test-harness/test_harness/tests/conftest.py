@@ -1,11 +1,11 @@
 import pytest
 from alembic.config import Config
 from alembic.script import ScriptDirectory
+from alembic_autogenerate_enums import get_defined_enums
 from sqlalchemy import create_engine, text
+
 from test_harness.database import get_url
 from test_harness.tests.fixtures import get_fixture_path
-
-from alembic_autogenerate_enums import get_defined_enums
 
 
 @pytest.fixture()
