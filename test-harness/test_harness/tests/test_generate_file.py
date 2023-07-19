@@ -16,8 +16,21 @@ from test_harness.models import (Base, BaseV2, SimpleEnum, SimpleModel,
 from test_harness.tests.fixtures import get_fixture_path
 
 
-@pytest.mark.parametrize("model", [SimpleModel, SimpleModelMapped])
-def test_migration_includes_sync_enum_values(clear_db, model: Base | BaseV2):
+@pytest.mark.parametrize(
+        "model,add_values,remove_values",
+        [
+            (SimpleModel, ["F"], []),
+            (SimpleModel, [], ["A"]),
+            (SimpleModelMapped, ["F"], []),
+            (SimpleModelMapped, [], ["A"]),
+        ]
+    )
+def test_migration_includes_sync_enum_values(
+    clear_db,
+    model: Base | BaseV2,
+    add_values: list[str],
+    remove_values: list[str],
+):
     # Set up temporary directory
     temp_dir = Path(tempfile.mkdtemp())
     os.mkdir(temp_dir / "versions")
@@ -43,15 +56,24 @@ def test_migration_includes_sync_enum_values(clear_db, model: Base | BaseV2):
         alembic.command.upgrade(config, "head")
 
         # Now manipulate the enum values by adding a new value
-        assert "F" not in [value for value in SimpleEnum]
-        SimpleEnum.add_member("F", "F")
+        for value in add_values:
+            assert value not in [value.value for value in SimpleEnum]
+            SimpleEnum.add_member(value, value)
+        for value in remove_values:
+            assert value in [value.value for value in SimpleEnum]
+            SimpleEnum.remove_member(value)
+
         sync_sqlalchemy(model, SimpleEnum)
 
         # Generate the updated file
         alembic.command.revision(config, autogenerate=True, message="Test migration")
 
-    # Downgrade for the next run
-    SimpleEnum.remove_member("F")
+    # Revert to the default values for the next run
+    for value in add_values:
+        SimpleEnum.remove_member(value)
+    for value in remove_values:
+        SimpleEnum.add_member(value, value)
+
     sync_sqlalchemy(model, SimpleEnum)
 
     # Get the generated script

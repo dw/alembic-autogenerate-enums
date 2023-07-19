@@ -241,7 +241,7 @@ def compare_enums(autogen_context, upgrade_ops, schema_names):
             old_values = defined.enum_definitions.get(name)
             # Alembic will handle creation of the type in this migration, so
             # skip undefined names.
-            if name in defined.enum_definitions and new_values.difference(old_values):
+            if name in defined.enum_definitions and new_values != old_values:
                 affected_columns = frozenset(
                     (table_definition.table_name, table_definition.column_name)
                     for table_definition in declared.table_definitions
