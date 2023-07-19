@@ -1,19 +1,14 @@
-from enum import Enum
-
+import sqlalchemy
 from sqlalchemy import Column
 from sqlalchemy import Enum as SqlEnum
 from sqlalchemy import Integer
-from sqlalchemy.orm import (DeclarativeBase, Mapped, declarative_base,
-                            mapped_column)
+from sqlalchemy.orm import Mapped, declarative_base
 
 from test_harness.columns import EnumCustomType
 from test_harness.enums import ModifiableEnum
 
 Base = declarative_base()
 BaseV2 = declarative_base()
-
-class BaseV3(DeclarativeBase):
-    pass
 
 class SimpleEnum(ModifiableEnum):
     A = "A"
@@ -32,7 +27,13 @@ class SimpleModelCustomEnum(BaseV2):
     id = Column(Integer, primary_key=True)
     enum_field = Column(EnumCustomType(SimpleEnum), nullable=False)
 
-class SimpleModelMapped(BaseV3):
-    __tablename__ = "simple_model_mapped"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    enum_field: Mapped[SimpleEnum] = mapped_column(SqlEnum(SimpleEnum))
+if sqlalchemy.__version__ > '2.0':
+    from sqlalchemy.orm import DeclarativeBase, mapped_column
+
+    class BaseV3(DeclarativeBase):
+        pass
+
+    class SimpleModelMapped(BaseV3):
+        __tablename__ = "simple_model_mapped"
+        id: Mapped[int] = mapped_column(primary_key=True)
+        enum_field: Mapped[SimpleEnum] = mapped_column(SqlEnum(SimpleEnum))

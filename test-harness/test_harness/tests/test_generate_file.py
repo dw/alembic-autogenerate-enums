@@ -6,13 +6,13 @@ from unittest.mock import PropertyMock, patch
 
 import alembic.config
 import pytest
+import sqlalchemy
 from alembic.autogenerate.api import AutogenContext
 from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
 
 from test_harness.enums import ModifiableEnum, sync_sqlalchemy
-from test_harness.models import (SimpleEnum, SimpleModel,
-                                 SimpleModelCustomEnum, SimpleModelMapped)
+from test_harness.models import SimpleEnum, SimpleModel, SimpleModelCustomEnum
 from test_harness.tests.fixtures import get_fixture_path
 
 
@@ -27,15 +27,21 @@ def modify_enum(model, enum: ModifiableEnum, add_values: list[str], remove_value
 
     sync_sqlalchemy(model, enum)
 
+MODEL_DEFINITIONS = [SimpleModel, SimpleModelCustomEnum]
+
+if sqlalchemy.__version__ > '2.0':
+    from test_harness.models import SimpleModelMapped
+    MODEL_DEFINITIONS.append(SimpleModelMapped)
+
 @pytest.mark.parametrize(
         "model,add_values,remove_values",
         [
-            (SimpleModel, ["F"], []),
-            (SimpleModel, [], ["A"]),
-            (SimpleModelMapped, ["F"], []),
-            (SimpleModelMapped, [], ["A"]),
-            (SimpleModelCustomEnum, ["F"], []),
-            (SimpleModelCustomEnum, [], ["A"]),
+            (model, add_values, remove_values)
+            for model in MODEL_DEFINITIONS
+            for add_values, remove_values in [
+                (["F"], []),
+                ([], ["A"]),
+            ]
         ]
     )
 def test_migration_includes_sync_enum_values(
